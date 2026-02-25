@@ -62,6 +62,7 @@ class WalkController extends ChangeNotifier {
   String _pedestrianState = 'unknown';
   String get pedestrianState => _pedestrianState;
   Timer? _persistDebounce;
+  Timer? _sensorWarmupTimer;
   bool _isPersisting = false;
   bool _hasPendingPersist = false;
   static const List<String> _weekdayLabels = <String>[
@@ -99,16 +100,25 @@ class WalkController extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
 
+    final hasPermission = await _pedometerService.hasActivityPermission();
+    if (!hasPermission) {
+      _error =
+          'Activity permission is required for live step tracking. Tap Start and allow permission.';
+      notifyListeners();
+    }
+
     _stepSubscription = _pedometerService.stepCountStream.listen(
       _onStepCount,
       onError: (_) {
-        _error = 'Step tracking unavailable on this device.';
+        _error =
+            'Step sensor unavailable. Check device sensor support and activity permission.';
         notifyListeners();
       },
       cancelOnError: false,
     );
     _pedestrianSubscription = _pedometerService.pedestrianStatusStream.listen(
       (event) {
+        _sensorReady = true;
         if (_pedestrianState != event.status) {
           _pedestrianState = event.status;
           notifyListeners();
@@ -135,11 +145,24 @@ class WalkController extends ChangeNotifier {
       isTracking: true,
       liveSessionSteps: _sessionAccumulatedSteps,
     );
+    if (!_sensorReady) {
+      _error = 'Waiting for motion sensor events. Walk a few steps.';
+    }
+    _sensorWarmupTimer?.cancel();
+    _sensorWarmupTimer = Timer(const Duration(seconds: 10), () {
+      if (!_stats.isTracking || _sensorReady) {
+        return;
+      }
+      _error =
+          'No step events detected yet. Disable battery saver and verify activity permission.';
+      notifyListeners();
+    });
     notifyListeners();
     return true;
   }
 
   Future<void> stopTracking() async {
+    _sensorWarmupTimer?.cancel();
     _sessionAccumulatedSteps = _stats.liveSessionSteps;
     _sessionStartSensorSteps = null;
     _stats = _stats.copyWith(isTracking: false);
@@ -338,6 +361,7 @@ class WalkController extends ChangeNotifier {
 
   Future<void> _onStepCount(StepCount event) async {
     _sensorReady = true;
+    _sensorWarmupTimer?.cancel();
     _latestSensorSteps = event.steps;
 
     if (!_stats.isTracking) {
@@ -442,6 +466,7 @@ class WalkController extends ChangeNotifier {
   @override
   void dispose() {
     _persistDebounce?.cancel();
+    _sensorWarmupTimer?.cancel();
     unawaited(_persistStatsSnapshot());
     _stepSubscription?.cancel();
     _pedestrianSubscription?.cancel();

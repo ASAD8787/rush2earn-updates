@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../config/web3_config.dart';
 import '../controllers/walk_controller.dart';
 import '../core/theme/app_theme.dart';
 import '../models/badge_tier.dart';
@@ -457,11 +456,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Text(
                 'rush2earn',
                 style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Professional walk-to-earn dashboard',
-                style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 2),
               Text(
