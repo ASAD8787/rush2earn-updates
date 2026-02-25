@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # rush2earn
 
 A new Flutter project.
@@ -15,3 +16,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+# rush2earn-updates
+Rush2Earn app update artifacts
+>>>>>>> fcd43f89d829ef2b4f16a83b9f2e103b3b8b1ccc
