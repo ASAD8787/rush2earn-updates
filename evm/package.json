@@ -1,0 +1,17 @@
+{
+  "name": "rush2earn-evm",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Rush token deployment for Base mainnet",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:base": "hardhat run scripts/deploy-base-mainnet.js --network base",
+    "verify:base": "hardhat verify --network base"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.1.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.10"
+  }
+}
