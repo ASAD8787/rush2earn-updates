@@ -19,12 +19,17 @@ class WalkMapScreen extends StatefulWidget {
 }
 
 class _WalkMapScreenState extends State<WalkMapScreen> {
+  static const String _tileTemplate =
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  static const List<String> _tileSubdomains = <String>['a', 'b', 'c', 'd'];
+  static const double _defaultZoom = 16;
+
   final MapController _mapController = MapController();
   final List<LatLng> _trail = <LatLng>[];
   StreamSubscription<Position>? _positionSub;
   LatLng? _currentPoint;
+  Position? _latestPosition;
   String? _error;
-  static const double _defaultZoom = 16;
 
   @override
   void initState() {
@@ -54,18 +59,22 @@ class _WalkMapScreenState extends State<WalkMapScreen> {
       return;
     }
 
-    final current = await Geolocator.getCurrentPosition();
-    _pushPoint(current.latitude, current.longitude, moveCamera: true);
+    final current = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+      ),
+    );
+    _pushPosition(current, moveCamera: true);
 
     _positionSub =
         Geolocator.getPositionStream(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.bestForNavigation,
-            distanceFilter: 3,
+            distanceFilter: 2,
           ),
         ).listen(
           (position) {
-            _pushPoint(position.latitude, position.longitude, moveCamera: true);
+            _pushPosition(position, moveCamera: true);
           },
           onError: (_) {
             if (!mounted) {
@@ -78,20 +87,52 @@ class _WalkMapScreenState extends State<WalkMapScreen> {
         );
   }
 
-  void _pushPoint(double lat, double lng, {required bool moveCamera}) {
-    final point = LatLng(lat, lng);
+  void _pushPosition(Position position, {required bool moveCamera}) {
+    if (!_shouldAcceptPosition(position)) {
+      return;
+    }
+    final point = LatLng(position.latitude, position.longitude);
     if (!mounted) {
       return;
     }
     setState(() {
+      _latestPosition = position;
       _currentPoint = point;
-      if (_trail.isEmpty || _distanceInMeters(_trail.last, point) > 1.5) {
+      if (_trail.isEmpty || _distanceInMeters(_trail.last, point) > 1.2) {
         _trail.add(point);
       }
     });
     if (moveCamera) {
       _mapController.move(point, _defaultZoom);
     }
+  }
+
+  bool _shouldAcceptPosition(Position position) {
+    if (position.accuracy > 60) {
+      return false;
+    }
+    if (_latestPosition == null) {
+      return true;
+    }
+
+    final previous = LatLng(
+      _latestPosition!.latitude,
+      _latestPosition!.longitude,
+    );
+    final current = LatLng(position.latitude, position.longitude);
+    final distance = _distanceInMeters(previous, current);
+    final dtSeconds =
+        position.timestamp
+            .difference(_latestPosition!.timestamp)
+            .inMilliseconds /
+        1000.0;
+    if (dtSeconds <= 0) {
+      return true;
+    }
+
+    final speedMps = distance / dtSeconds;
+    // Ignore GPS jumps that imply unrealistic walking speed.
+    return speedMps <= 8.0;
   }
 
   double _distanceInMeters(LatLng a, LatLng b) {
@@ -178,8 +219,9 @@ class _WalkMapScreenState extends State<WalkMapScreen> {
                           ),
                           children: [
                             TileLayer(
-                              urlTemplate:
-                                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              urlTemplate: _tileTemplate,
+                              subdomains: _tileSubdomains,
+                              retinaMode: RetinaMode.isHighDensity(context),
                               userAgentPackageName: 'com.example.rush2earn',
                             ),
                             if (_trail.length >= 2)
@@ -187,8 +229,27 @@ class _WalkMapScreenState extends State<WalkMapScreen> {
                                 polylines: [
                                   Polyline(
                                     points: _trail,
+                                    strokeWidth: 10,
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.24,
+                                    ),
+                                  ),
+                                  Polyline(
+                                    points: _trail,
                                     strokeWidth: 5,
                                     color: AppTheme.primary,
+                                  ),
+                                ],
+                              ),
+                            if (_currentPoint != null)
+                              CircleLayer(
+                                circles: [
+                                  CircleMarker(
+                                    point: _currentPoint!,
+                                    radius: 20,
+                                    color: AppTheme.accent.withValues(
+                                      alpha: 0.22,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -207,12 +268,38 @@ class _WalkMapScreenState extends State<WalkMapScreen> {
                                           color: Colors.white,
                                           width: 2,
                                         ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppTheme.accent.withValues(
+                                              alpha: 0.6,
+                                            ),
+                                            blurRadius: 12,
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
                           ],
+                        ),
+                        Positioned(
+                          right: 10,
+                          top: 10,
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              child: Text(
+                                _latestPosition == null
+                                    ? 'GPS: acquiring'
+                                    : 'GPS ±${_latestPosition!.accuracy.toStringAsFixed(1)}m',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                          ),
                         ),
                         if (_error != null)
                           Positioned(

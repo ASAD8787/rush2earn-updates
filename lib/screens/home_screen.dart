@@ -39,6 +39,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late final Animation<Offset> _walkSlide;
   final _storageService = StorageService();
   final _appUpdateService = AppUpdateService();
+  int _lastLiveStepCount = 0;
+  DateTime _lastStepHapticAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
   void initState() {
@@ -67,17 +69,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       walletService: WalletService(),
       relayerService: RelayerService(),
     )..initialize();
-    _controller.addListener(_syncPulseAnimation);
+    _controller.addListener(_onControllerChanged);
     _scheduleAutoUpdateCheck();
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_syncPulseAnimation);
+    _controller.removeListener(_onControllerChanged);
     _controller.dispose();
     _pulseController.dispose();
     _entryController.dispose();
     super.dispose();
+  }
+
+  void _onControllerChanged() {
+    _syncPulseAnimation();
+    _triggerStepHapticIfNeeded();
+  }
+
+  void _triggerStepHapticIfNeeded() {
+    final stats = _controller.stats;
+    if (!stats.isTracking) {
+      _lastLiveStepCount = stats.liveSessionSteps;
+      return;
+    }
+
+    final currentLiveSteps = stats.liveSessionSteps;
+    if (currentLiveSteps <= _lastLiveStepCount) {
+      return;
+    }
+    _lastLiveStepCount = currentLiveSteps;
+
+    final now = DateTime.now();
+    if (now.difference(_lastStepHapticAt).inMilliseconds < 600) {
+      return;
+    }
+    _lastStepHapticAt = now;
+    HapticFeedback.selectionClick();
   }
 
   void _syncPulseAnimation() {
