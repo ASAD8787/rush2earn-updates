@@ -1,5 +1,5 @@
 {
-    "apkUrl":  "https://github.com/ASAD8787/rush2earn-updates/releases/download/vX.Y.Z/rush2earn-X.Y.Z.apk",
-    "version":  "X.Y.Z",
-    "notes":  "what changed"
+    "apkUrl":  "https://github.com/ASAD8787/rush2earn-updates/releases/download/v2.0/rush2earn-2.0.apk",
+    "version":  "2.0",
+    "notes":  "added google login"
 }
