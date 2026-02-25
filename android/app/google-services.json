@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "421278824975",
-    "project_id": "rush2earn-1",
-    "storage_bucket": "rush2earn-1.firebasestorage.app"
+    "project_number": "138591507697",
+    "project_id": "rush2earn77",
+    "storage_bucket": "rush2earn77.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:421278824975:android:484d32914d5242961ec17a",
+        "mobilesdk_app_id": "1:138591507697:android:1c2724359633e1f7be4550",
         "android_client_info": {
           "package_name": "com.example.rush2earn"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "138591507697-rhv54evvkvshs752o2m7ufgbiluujth5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.rush2earn",
+            "certificate_hash": "8f3b201a3f6a73a9786274df15de4537e364f24b"
+          }
+        },
+        {
+          "client_id": "138591507697-tkj0egkq8lkpqjbcj2ke8i37c6shi2oa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDTgtpHkmY47j4q2lvZvRshfcV6O0CwkEA"
+          "current_key": "AIzaSyDM-hEZpNW-JWyeLAYN72R1gsVruOxQy_8"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "138591507697-tkj0egkq8lkpqjbcj2ke8i37c6shi2oa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
