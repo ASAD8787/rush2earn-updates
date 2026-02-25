@@ -698,7 +698,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           icon: Icons.hub_outlined,
           accent: const Color(0xFFBDA7FF),
           value: Text(
-            'Base #${Web3Config.baseMainnetChainId}',
+            'Base Network',
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),

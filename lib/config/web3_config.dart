@@ -1,5 +1,6 @@
 class Web3Config {
   static const int baseMainnetChainId = 8453;
+  static const String networkDisplayName = 'Base Mainnet';
   static const String baseMainnetRpc = 'https://mainnet.base.org';
   static const String rushTokenContract =
       '0xa5c0EA1e447992F3Ed975507b544CD2D95b2f533';
