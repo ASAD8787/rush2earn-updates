@@ -14,6 +14,8 @@ import '../widgets/animated_metric_text.dart';
 import '../widgets/nebula_background.dart';
 import '../widgets/status_pill.dart';
 import '../widgets/weekly_steps_poles.dart';
+import 'qr_scan_screen.dart';
+import 'walk_map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -120,6 +122,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _pasteAddressTo(TextEditingController controller) async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text?.trim();
+    if (text == null || text.isEmpty) {
+      _showMessage('Clipboard is empty.');
+      return;
+    }
+    controller.text = text;
+    controller.selection = TextSelection.collapsed(
+      offset: controller.text.length,
+    );
+  }
+
+  Future<void> _scanAddressTo(TextEditingController controller) async {
+    final scanned = await Navigator.of(
+      context,
+    ).push<String>(MaterialPageRoute(builder: (_) => const QrScanScreen()));
+    if (scanned == null || scanned.trim().isEmpty) {
+      return;
+    }
+    controller.text = scanned.trim();
+    controller.selection = TextSelection.collapsed(
+      offset: controller.text.length,
+    );
+  }
+
   Future<void> _showBackupDialog() async {
     final code = _controller.createBackupCode();
     await showDialog<void>(
@@ -200,6 +228,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final started = await _controller.startTracking();
     if (started) {
       await HapticFeedback.mediumImpact();
+      if (!mounted) {
+        return;
+      }
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => WalkMapScreen(controller: _controller),
+        ),
+      );
     }
   }
 
@@ -260,9 +296,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const SizedBox(height: 10),
                   TextField(
                     controller: addressController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Wallet Address',
                       hintText: '0x...',
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Paste',
+                            onPressed: () => _pasteAddressTo(addressController),
+                            icon: const Icon(Icons.content_paste_rounded),
+                          ),
+                          IconButton(
+                            tooltip: 'Scan QR',
+                            onPressed: () => _scanAddressTo(addressController),
+                            icon: const Icon(Icons.qr_code_scanner_rounded),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -317,9 +368,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               const SizedBox(height: 10),
               TextField(
                 controller: recipientController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Receiver Address',
                   hintText: '0x...',
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Paste',
+                        onPressed: () => _pasteAddressTo(recipientController),
+                        icon: const Icon(Icons.content_paste_rounded),
+                      ),
+                      IconButton(
+                        tooltip: 'Scan QR',
+                        onPressed: () => _scanAddressTo(recipientController),
+                        icon: const Icon(Icons.qr_code_scanner_rounded),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 10),

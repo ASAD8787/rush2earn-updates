@@ -34,11 +34,14 @@ dependencies:
   cupertino_icons: ^1.0.8
   pedometer: ^4.1.1
   shared_preferences: ^2.5.3
-  google_fonts: ^6.2.1
-  google_sign_in: ^6.2.1
-  permission_handler: ^11.4.0
+  google_fonts: ^8.0.2
+  google_sign_in: ^7.2.0
+  mobile_scanner: ^7.2.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^13.0.2
+  permission_handler: ^12.0.1
   http: ^1.2.2
-  package_info_plus: ^8.0.2
   url_launcher: ^6.3.1
 
 dev_dependencies:

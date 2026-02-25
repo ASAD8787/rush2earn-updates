@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:pedometer/pedometer.dart';
@@ -286,7 +287,8 @@ class WalkController extends ChangeNotifier {
     if (tokenUnits <= 0) {
       return 'Enter a valid amount (min 0.001 RUSH).';
     }
-    if (tokenUnits > _stats.claimedSteps) {
+    final bypassLimit = Web3Config.allowUnlimitedWithdrawForTesting;
+    if (!bypassLimit && tokenUnits > _stats.claimedSteps) {
       return 'Insufficient claimed RUSH balance.';
     }
 
@@ -305,7 +307,9 @@ class WalkController extends ChangeNotifier {
       return result.message;
     }
 
-    final remaining = _stats.claimedSteps - tokenUnits;
+    final remaining = bypassLimit
+        ? math.max(0, _stats.claimedSteps - tokenUnits)
+        : _stats.claimedSteps - tokenUnits;
     _stats = _stats.copyWith(claimedSteps: remaining);
     await _storageService.saveClaimedSteps(remaining);
     notifyListeners();
@@ -329,7 +333,8 @@ class WalkController extends ChangeNotifier {
     if (tokenUnits <= 0) {
       return 'Enter a valid amount (min 0.001 RUSH).';
     }
-    if (tokenUnits > _stats.claimedSteps) {
+    final bypassLimit = Web3Config.allowUnlimitedWithdrawForTesting;
+    if (!bypassLimit && tokenUnits > _stats.claimedSteps) {
       return 'Insufficient claimed RUSH balance.';
     }
 
@@ -348,7 +353,9 @@ class WalkController extends ChangeNotifier {
       return result.message;
     }
 
-    final remaining = _stats.claimedSteps - tokenUnits;
+    final remaining = bypassLimit
+        ? math.max(0, _stats.claimedSteps - tokenUnits)
+        : _stats.claimedSteps - tokenUnits;
     _stats = _stats.copyWith(claimedSteps: remaining);
     await _storageService.saveClaimedSteps(remaining);
     notifyListeners();

@@ -12,6 +12,18 @@ class RelayerService {
     required String amountToken,
     required bool isWithdraw,
   }) async {
+    if (Web3Config.useMockRelayerForTesting) {
+      final now = DateTime.now().millisecondsSinceEpoch.toRadixString(16);
+      return RelayerResult(
+        success: true,
+        message: isWithdraw
+            ? 'Mock withdraw submitted successfully.'
+            : 'Mock send submitted successfully.',
+        txHash: '0xmock$now',
+        estimatedBaseFee: 0.00012,
+      );
+    }
+
     final uri = Uri.parse('${Web3Config.relayerBaseUrl}/v1/token/transfer');
     final payload = <String, dynamic>{
       'action': isWithdraw ? 'withdraw' : 'send',
@@ -38,7 +50,10 @@ class RelayerService {
 
       final body = jsonDecode(res.body);
       if (body is! Map<String, dynamic>) {
-        return const RelayerResult(success: false, message: 'Invalid relayer response.');
+        return const RelayerResult(
+          success: false,
+          message: 'Invalid relayer response.',
+        );
       }
 
       return RelayerResult(

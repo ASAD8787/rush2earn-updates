@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/web3_config.dart';
@@ -9,8 +8,7 @@ import '../config/web3_config.dart';
 class AppUpdateService {
   Future<String?> checkAndMaybeUpdate({required bool userInitiated}) async {
     try {
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version.trim();
+      final currentVersion = Web3Config.currentAppVersion.trim();
       final manifestUri = Uri.parse(Web3Config.appUpdateManifestUrl);
       final response = await http.get(manifestUri);
       if (response.statusCode < 200 || response.statusCode >= 300) {

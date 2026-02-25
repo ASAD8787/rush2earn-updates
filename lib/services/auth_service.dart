@@ -13,12 +13,21 @@ class AuthUser {
 }
 
 class AuthService {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: const <String>['email', 'profile'],
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  bool _initialized = false;
+
+  Future<void> _ensureInitialized() async {
+    if (_initialized) {
+      return;
+    }
+    await _googleSignIn.initialize();
+    _initialized = true;
+  }
 
   Future<AuthUser?> tryRestoreSession() async {
-    final account = await _googleSignIn.signInSilently();
+    await _ensureInitialized();
+    final restoreFuture = _googleSignIn.attemptLightweightAuthentication();
+    final account = restoreFuture == null ? null : await restoreFuture;
     if (account == null) {
       return null;
     }
@@ -26,14 +35,17 @@ class AuthService {
   }
 
   Future<AuthUser> signInWithGoogle() async {
-    final account = await _googleSignIn.signIn();
-    if (account == null) {
-      throw const AuthException('Google sign-in was canceled.');
+    await _ensureInitialized();
+    try {
+      final account = await _googleSignIn.authenticate();
+      return _toUser(account);
+    } on GoogleSignInException catch (e) {
+      throw AuthException(_friendlyError(e));
     }
-    return _toUser(account);
   }
 
   Future<void> signOut() async {
+    await _ensureInitialized();
     await _googleSignIn.signOut();
   }
 
@@ -43,6 +55,21 @@ class AuthService {
       email: account.email,
       photoUrl: account.photoUrl,
     );
+  }
+
+  String _friendlyError(GoogleSignInException exception) {
+    switch (exception.code) {
+      case GoogleSignInExceptionCode.canceled:
+        return 'Google sign-in was canceled.';
+      case GoogleSignInExceptionCode.uiUnavailable:
+        return 'Google sign-in UI unavailable on this device.';
+      case GoogleSignInExceptionCode.userMismatch:
+        return 'Signed-in account does not match current session.';
+      case GoogleSignInExceptionCode.clientConfigurationError:
+        return 'Google Sign-In is not configured correctly for this build.';
+      default:
+        return 'Google sign-in failed. Please try again.';
+    }
   }
 }
 
