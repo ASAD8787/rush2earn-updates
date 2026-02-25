@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "138591507697",
-    "project_id": "rush2earn77",
-    "storage_bucket": "rush2earn77.firebasestorage.app"
+    "project_number": "421278824975",
+    "project_id": "rush2earn-1",
+    "storage_bucket": "rush2earn-1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:138591507697:android:1c2724359633e1f7be4550",
+        "mobilesdk_app_id": "1:421278824975:android:484d32914d5242961ec17a",
         "android_client_info": {
           "package_name": "com.example.rush2earn"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDM-hEZpNW-JWyeLAYN72R1gsVruOxQy_8"
+          "current_key": "AIzaSyDTgtpHkmY47j4q2lvZvRshfcV6O0CwkEA"
         }
       ],
       "services": {
