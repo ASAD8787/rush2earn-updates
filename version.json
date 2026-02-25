@@ -1,5 +1,5 @@
 {
-    "apkUrl":  "https://github.com/ASAD8787/rush2earn-updates/releases/download/v4.3/rush2earn-4.3.apk",
-    "version":  "4.3",
-    "notes":  "beta updates"
+    "apkUrl":  "https://github.com/ASAD8787/rush2earn-updates/releases/download/v5/rush2earn-5.apk",
+    "version":  "5",
+    "notes":  "Added relayer backend setup for real Base transfers"
 }
