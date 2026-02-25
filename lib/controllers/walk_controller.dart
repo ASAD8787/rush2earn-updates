@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:pedometer/pedometer.dart';
@@ -179,6 +180,73 @@ class WalkController extends ChangeNotifier {
   Future<void> disconnectWallet() async {
     await _walletService.disconnect();
     notifyListeners();
+  }
+
+  String createBackupCode() {
+    final payload = <String, dynamic>{
+      'schema': 1,
+      'totalSteps': _stats.totalSteps,
+      'claimedSteps': _stats.claimedSteps,
+      'dailySteps': _dailySteps,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    final bytes = utf8.encode(jsonEncode(payload));
+    return base64UrlEncode(bytes);
+  }
+
+  Future<String> restoreFromBackupCode(String backupCode) async {
+    try {
+      final normalized = backupCode.trim();
+      if (normalized.isEmpty) {
+        return 'Backup code is empty.';
+      }
+      final decoded = utf8.decode(
+        base64Url.decode(base64Url.normalize(normalized)),
+      );
+      final payload = jsonDecode(decoded);
+      if (payload is! Map<String, dynamic>) {
+        return 'Invalid backup format.';
+      }
+
+      final totalSteps = (payload['totalSteps'] as num?)?.toInt();
+      final claimedSteps = (payload['claimedSteps'] as num?)?.toInt();
+      final daily = payload['dailySteps'];
+      if (totalSteps == null ||
+          claimedSteps == null ||
+          daily is! Map<String, dynamic>) {
+        return 'Invalid backup payload.';
+      }
+
+      final restoredDaily = <String, int>{};
+      daily.forEach((key, value) {
+        if (value is num) {
+          restoredDaily[key] = value.toInt();
+        }
+      });
+
+      final safeClaimed = claimedSteps > totalSteps ? totalSteps : claimedSteps;
+      _stats = _stats.copyWith(
+        totalSteps: totalSteps < 0 ? 0 : totalSteps,
+        claimedSteps: safeClaimed < 0 ? 0 : safeClaimed,
+        isTracking: false,
+        liveSessionSteps: 0,
+      );
+      _dailySteps = restoredDaily;
+      _trimDailyHistory();
+      _sessionAccumulatedSteps = 0;
+      _sessionStartSensorSteps = null;
+      _sessionStartTotalSteps = _stats.totalSteps;
+
+      await Future.wait<void>([
+        _storageService.saveTotalSteps(_stats.totalSteps),
+        _storageService.saveClaimedSteps(_stats.claimedSteps),
+        _storageService.saveDailySteps(_dailySteps),
+      ]);
+      notifyListeners();
+      return 'Backup restored successfully.';
+    } catch (_) {
+      return 'Could not restore backup. Check your code and try again.';
+    }
   }
 
   Future<String> sendTokens({

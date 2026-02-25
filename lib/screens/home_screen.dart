@@ -121,6 +121,77 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _showBackupDialog() async {
+    final code = _controller.createBackupCode();
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Backup Code'),
+          content: SingleChildScrollView(
+            child: SelectableText(
+              code,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: code));
+                if (!context.mounted) {
+                  return;
+                }
+                Navigator.of(context).pop();
+                _showMessage('Backup code copied. Save it safely.');
+              },
+              child: const Text('Copy'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showRestoreDialog() async {
+    final backupController = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Restore Backup'),
+          content: TextField(
+            controller: backupController,
+            maxLines: 6,
+            decoration: const InputDecoration(hintText: 'Paste backup code'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final msg = await _controller.restoreFromBackupCode(
+                  backupController.text,
+                );
+                if (!dialogContext.mounted) {
+                  return;
+                }
+                Navigator.of(dialogContext).pop();
+                _showMessage(msg);
+              },
+              child: const Text('Restore'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _toggleTracking() async {
     if (_controller.stats.isTracking) {
       await _controller.stopTracking();
@@ -880,6 +951,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 icon: const Icon(Icons.system_update_alt_rounded),
                 label: const Text('Check For Updates'),
               ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _showBackupDialog,
+                    icon: const Icon(Icons.backup_outlined),
+                    label: const Text('Backup Data'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _showRestoreDialog,
+                    icon: const Icon(Icons.restore_rounded),
+                    label: const Text('Restore Data'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
